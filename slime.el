@@ -947,6 +947,13 @@ See `slime-lisp-implementations'")
                          (slime-lisp-options command))
                         (t (slime-read-interactive-args))))))
 
+(defun slime-style (&optional style)
+  (interactive
+   (list (intern-soft (read-from-minibuffer "Style: " "nil"))))
+  (lexical-let ((style style))
+    (slime-start
+     :init (lambda (x y) (slime-style-init-command x y `(:style ,style))))))
+
 (defvar slime-inferior-lisp-program-history '()
   "History list of command strings.  Used by `slime'.")
 
@@ -1198,7 +1205,7 @@ See `slime-start'."
     slime-inferior-lisp-args))
 
 ;; XXX load-server & start-server used to be separated. maybe that was  better.
-(defun slime-init-command (port-filename _coding-system)
+(defun slime-init-command (port-filename _coding-system &optional extra-init-args)
   "Return a string to initialize Lisp."
   (let ((loader (if (file-name-absolute-p slime-backend)
                     slime-backend
@@ -1210,7 +1217,8 @@ See `slime-start'."
                      :verbose t)
                (funcall (read-from-string "swank-loader:init"))
                (funcall (read-from-string "swank:start-server")
-                        ,(slime-to-lisp-filename port-filename))))))
+                        ,(slime-to-lisp-filename port-filename)
+                        ,@extra-init-args)))))
 
 (defun slime-swank-port-file ()
   "Filename where the SWANK server writes its TCP port number."
